@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Mod1
 {
     public class DummyComponent : MonoBehaviour { }
-    public class GlobalSettings { public int swordamount; }
+    public class GlobalSettings { public int swordamount; public int cyn; }
     public class RadianceExtras : Mod, ICustomMenuMod, IGlobalSettings<GlobalSettings>
     {
 
@@ -38,14 +38,26 @@ namespace Mod1
             Hard,
         }
 
+        enum Chunters
+        {
+            Yes,
+            No,
+        }
+
         Aswords swordamount = Aswords.Easy;
+        Chunters cyn = Chunters.Yes;
 
         public void OnLoadGlobal(GlobalSettings s)
         {
             swordamount = (Aswords)s.swordamount;
             Swordindex = (s.swordamount + 1) * 2;
+
+            cyn = (Chunters)s.cyn;
+
         }
-        public GlobalSettings OnSaveGlobal() => new GlobalSettings() { swordamount = (int)swordamount };
+
+
+        public GlobalSettings OnSaveGlobal() => new GlobalSettings() { swordamount = (int)swordamount, cyn = (int)cyn };
 
         int Swordindex = 2;
 
@@ -93,7 +105,23 @@ namespace Mod1
                                         },
                                         () => (int)swordamount),
 
+
+                                        new HorizontalOption("Craystal Hunters",
+                                            "If you want them in the fight or not",
+                                             Enum.GetNames(typeof(Chunters)), //get an string array of all values in Modes enum
+                                        (index) =>
+                                        {
+                                            cyn = (Chunters)index;
+                                        },
+                                        () => (int)cyn)
+
+
+
                             }
+
+
+
+
                 );
 
             //uses the GetMenuScreen function to return a menuscreen that MAPI can use. 
@@ -116,6 +144,10 @@ namespace Mod1
                         {
                             GameObject sword = _swords[i];
                             GameObject newSword = GameObject.Instantiate(sword, self.transform);
+                            newSword.transform.localPosition = new Vector3((float)i - 1.5f, 0f, newSword.transform.localPosition.z);
+                            GameObject swordHome = new GameObject($"S{i + 1} Home");
+                            swordHome.transform.parent = self.transform;
+                            swordHome.transform.localPosition = newSword.transform.localPosition;
 
                             PlayMakerFSM fsm = newSword.LocateMyFSM("xero_nail");
                             newSword.SetActive(true);
@@ -133,10 +165,17 @@ namespace Mod1
                                 }
                             }
                         }
-                        GameObject newHunter = GameObject.Instantiate(hunter);
-                        newHunter.GetComponent<HealthManager>().hp = int.MaxValue;
-                        newHunter.SetActive(true);
-                        newHunter.transform.position = new Vector3(67f, 28f, newHunter.transform.position.z);
+                        switch (cyn)
+                        {
+                            case Chunters.Yes:
+                                GameObject newHunter = GameObject.Instantiate(hunter);
+                                newHunter.GetComponent<HealthManager>().hp = int.MaxValue;
+                                newHunter.SetActive(true);
+                                newHunter.transform.position = new Vector3(67f, 28f, newHunter.transform.position.z);
+                                break;
+                            case Chunters.No:
+                                break;
+                        }
                     }
                 }, 0);
             }
