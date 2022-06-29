@@ -368,7 +368,7 @@ namespace Mod1
 
             Log(Swordindex);
 
-            ModHooks.HeroUpdateHook += OnHeroUpdate;
+            /*ModHooks.HeroUpdateHook += OnHeroUpdate;*/
             ModHooks.LanguageGetHook += ModHooks_LanguageGetHook;
             On.PlayMakerFSM.OnEnable += PlayMakerFSM_OnEnable;
 
@@ -407,13 +407,6 @@ namespace Mod1
             }
         }
 
-        public void OnHeroUpdate()
-        {
-            if (Input.GetKeyDown(KeyCode.O))
-            {
-                Log("Key Pressed");
-            }
-        }
 
     }
 }
