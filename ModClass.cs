@@ -13,12 +13,13 @@ using UnityEngine;
 namespace Mod1
 {
     public class DummyComponent : MonoBehaviour { }
-    public class GlobalSettings { public int xyn; public int cyn; public int myn; public int swordamount; public int miniamount; }
+    public class GlobalSettings { public int xyn; public int cyn; public int myn; public int syn; public int swordamount; public int miniamount; }
     public class RadianceExtras : Mod, ICustomMenuMod, IGlobalSettings<GlobalSettings>
     {
 
         private GameObject[] _swords = new GameObject[4];
         private GameObject watchers = null;
+        private GameObject shields = null;
 
         private GameObject hunter = null;
 
@@ -35,6 +36,7 @@ namespace Mod1
         ("RestingGrounds_02_boss", "Warrior/Ghost Warrior Xero/Sword 4"),
         ("Mines_07","Crystal Flyer"),
         ("GG_Watcher_Knights","Battle Control/Black Knight 1"),
+        ("sharedassets314", "Markoth Shield"),
     };
         }
 
@@ -55,6 +57,11 @@ namespace Mod1
             Yes,
             No,
         }
+        enum Markshields
+        {
+            Yes,
+            No,
+        }
 
         enum Aswords
         {
@@ -69,32 +76,37 @@ namespace Mod1
             Supreme,
         }
 
+
         Xswords xyn = Xswords.Yes;
         Chunters cyn = Chunters.Yes;
         Mknights myn = Mknights.Yes;
+        Markshields syn = Markshields.Yes;
 
         Aswords swordamount = Aswords.Easy;
         MiniWatchers miniamount = MiniWatchers.Easy;
+
+
+
+        int Swordindex = 2;
+        int Watcherindex = 2;
 
         public void OnLoadGlobal(GlobalSettings s)
         {
             xyn = (Xswords)s.xyn;
             cyn = (Chunters)s.cyn;
             myn = (Mknights)s.myn;
+            syn = (Markshields)s.syn;
 
             swordamount = (Aswords)s.swordamount;
             Swordindex = (s.swordamount + 1) * 2;
 
             miniamount = (MiniWatchers)s.miniamount;
-            Watcherindex = s.miniamount * 2;
+            Watcherindex = (s.miniamount + 1) * 2;
             Log(Watcherindex);
         }
 
 
-        public GlobalSettings OnSaveGlobal() => new GlobalSettings() { xyn = (int)xyn, cyn = (int)cyn, myn = (int)myn, swordamount = (int)swordamount, miniamount = (int)miniamount };
-
-        int Swordindex = 2;
-        int Watcherindex = 2;
+        public GlobalSettings OnSaveGlobal() => new GlobalSettings() { xyn = (int)xyn, cyn = (int)cyn, myn = (int)myn, syn = (int)syn, swordamount = (int)swordamount, miniamount = (int)miniamount };
 
         // a variable that holds our Satchel.BetterMenu.Menu for us to use in the code.
         private Menu HomeMenu;
@@ -160,6 +172,14 @@ namespace Mod1
                                         },
                                         () => (int)myn),
 
+                                        new HorizontalOption("Markoth Shield",
+                                            "If you want them in the fight or not",
+                                             Enum.GetNames(typeof(Markshields)), //get an string array of all values in Modes enum
+                                        (index) =>
+                                        {
+                                            syn = (Markshields)index;
+                                        },
+                                        () => (int)syn),
 
                         });
             SettingsMenu ??= new Menu(
@@ -194,7 +214,7 @@ namespace Mod1
                                         },
                                         () => (int)swordamount),
 
-                                        new HorizontalOption("Mini Watcher Knights Amount",
+                                        new HorizontalOption("Mini Watchers Amount",
                                             "Goes up by 2 with each option",
                                              Enum.GetNames(typeof(MiniWatchers)), //get an string array of all values in Modes enum
                                         (index) =>
@@ -223,6 +243,9 @@ namespace Mod1
 
                                         },
                                         () => (int)miniamount),
+
+
+
                         });
 
             //uses the GetMenuScreen function to return a menuscreen that MAPI can use. 
@@ -339,6 +362,20 @@ namespace Mod1
                                 break;
                         }
 
+                        switch(syn)
+                        {
+                            case Markshields.Yes:
+                        GameObject newShields = GameObject.Instantiate(shields, self.transform);
+                        PlayMakerFSM sfsm = newShields.LocateMyFSM("Sheild Attack");
+                        newShields.SetActive(true);
+                        newShields.transform.GetChild(1).gameObject.SetActive(true);
+                        sfsm.GetState("Idle");
+                        sfsm.SetState("Idle");
+
+                                break;
+                            case Markshields.No:
+                                break;
+                    }
 
 
 
@@ -366,8 +403,6 @@ namespace Mod1
         public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
 
-            Log(Swordindex);
-
             /*ModHooks.HeroUpdateHook += OnHeroUpdate;*/
             ModHooks.LanguageGetHook += ModHooks_LanguageGetHook;
             On.PlayMakerFSM.OnEnable += PlayMakerFSM_OnEnable;
@@ -384,8 +419,8 @@ namespace Mod1
                 UnityEngine.Object.DontDestroyOnLoad(_swords[index]);
             }
 
-
-
+            shields = preloadedObjects["sharedassets314"]["Markoth Shield"];
+            UnityEngine.Object.DontDestroyOnLoad(shields);
 
         }
 
